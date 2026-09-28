@@ -1,0 +1,3 @@
+para crescimento de regiao: 100, 200, 30
+para preenchimento de região: 100, 200
+
