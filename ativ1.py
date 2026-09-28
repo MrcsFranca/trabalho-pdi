@@ -43,16 +43,14 @@ def logaritmo(img):
 
 def potencia(img, c, gama):
     img = cv2.imread(img)
-
     img = img.astype(np.float32)
 
     img = img / 255.0
-
     img = c * (img ** gama)
-
     img = img * 255.0
 
-    img = np.astype(img, 'uint8')
+    img = np.clip(img, 0, 255)
+    img = img.astype(np.uint8)
     return img
 
 def fatiamento(img, saida):

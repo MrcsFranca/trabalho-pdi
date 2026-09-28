@@ -11,11 +11,17 @@ def suavizacao(img, tam):
     img = cinza(img)
 
     M = tam * tam
+    margem = tam // 2
 
-    media = np.ones((tam, tam), np.float32) / M
+    img_pad = np.pad(img, margem, mode='reflect')
+    img_suave = np.zeros_like(img, dtype=np.uint8)
 
-    img_suave = cv2.filter2D(img, -1, media, borderType=cv2.BORDER_DEFAULT)
-    
+    # calcula a média pela vizinhança
+    for y in range(img.shape[0]):
+        for x in range(img.shape[1]):
+            vizin = img_pad[y:y + tam, x:x + tam]
+            img_suave[y, x] = np.mean(vizin)
+
     return img, img_suave
 
 # essa função foi desenvolvida com o auxílio de IA. Não tinha entendido muito bem como ela funcionava
@@ -99,6 +105,7 @@ def prewitt(img):
     
     return img, Mag
 
+# o kernel foi implementado por mim e a convoluçaõ eu usei o filter2D 
 def sobel(img):
     img = cinza(img)
 

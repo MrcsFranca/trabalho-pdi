@@ -1,3 +1,71 @@
-para crescimento de regiao: 100, 200, 30
-para preenchimento de região: 100, 200
+lua.jpg
+suavização pela média: 3
+suavização pela mediana: 3
+suavização k-vizinhos: 5,3
 
+erosão: 3
+dilatação: 3
+abertura: 3
+fechamento: 3
+gradiente morfológico: 3
+fronteira interna: 3
+fronteira externa: 3
+
+pontos isolados: 50
+detecção de linhas: 100
+
+crescimento de região: 472,452,50
+preenchimento de região: não consegui encontrar o ponto adequado
+componente c/ semente: 240,416
+
+canny: 50,100,3
+
+contraste: 40,255
+potência: 1,0.5
+
+fatiamento de bits: lua
+
+gaussiano passa-baixa: 30
+gaussiano passa-alta: 30
+
+rejeita-banda: caminho_da_mascara
+
+passa-banda: 60,30
+rejeita-banda: 60,30
+
+--------------------------------------
+
+forest.jpg
+suavização pela média: 5
+suavização pela mediana: 3
+suavização k-vizinhos: 5, 12
+
+erosão: 3
+dilatação: 3
+abertura: 3
+fechamento: 5
+gradiente morfológico: 3
+fronteira interna: 3
+fronteira externa: 3
+
+pontos isolados: 200
+detecção de linhas: 150
+
+crescimento de região: 250, 390, 40
+preenchimento de região: n é boa pra essa imagem -> n tem regioes fechadas
+componente c/ semente: 650, 330
+
+canny: 80, 200, 5
+
+contraste: 1.5, 0
+potência: 1.0, 1.8
+
+fatiamento de bits: plano_bits
+
+gaussiano passa-baixa: 50
+gaussiano passa-alta: 100
+
+rejeita-banda: caminho_sa_mascara
+
+passa-banda: 80, 40
+rejeita-banda: 80, 40

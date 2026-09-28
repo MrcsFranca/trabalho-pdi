@@ -22,8 +22,11 @@ def fronteira_externa(img, kernel):
 def preenchimento(img, seed):
     complemento = cv.bitwise_not(img)
 
+    # a interface está recebendo x e depois y, aqui eu estou convertendo para depois usar como y e depois x
+    x_seed, y_seed = seed
+
     x_atual = np.zeros_like(img)
-    x_atual[seed[0], seed[1]] = 255
+    x_atual[y_seed, x_seed] = 255
 
     kernel = cv.getStructuringElement(cv.MORPH_CROSS, (3, 3))
 
