@@ -56,7 +56,7 @@ def medir_objetos(img_bin):
         if perimetro > 1:
             pontos = np.column_stack((xs, ys)).astype(np.float64)
             if len(pontos) > 1500:
-                # fronteiras muito grandes: subamostra pra manter o cálculo rápido
+                # fiz isso para fronteiras muito grandes, pq esta demorando muito no processamento e começou a travar o notebook
                 idx = np.linspace(0, len(pontos) - 1, 1500).astype(int)
                 pontos = pontos[idx]
             diffs = pontos[:, None, :] - pontos[None, :, :]
