@@ -1,5 +1,6 @@
 import os
 import cv2
+import pygame # para tocar música
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, ListView, ListItem, Label, Input
 from textual.containers import Horizontal, Vertical
@@ -11,6 +12,7 @@ from operacoes import OPERACOES, cv2_para_pil
 # cache para somar os algoritmos
 CACHE_DIR = "_cache"
 CACHE_PATH = os.path.join(CACHE_DIR, "temp.png")
+MUSICA = "batidinhaBoa.mp3"
 
 # passa o número digitado apara o id da operação para tecla de atalho
 ATALHOS = [
@@ -58,7 +60,7 @@ class TrabalhoPDI(App):
     #digitando { color: cyan; }
     """
 
-    BINDINGS = [("q", "quit", "Sair")]
+    BINDINGS = [("q", "quit", "Sair"), ("c", "toggle_camera", "ativa/desativa câmera"), ("d", "toggle_deteccao", "ativa/desativa detecção")]
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -152,6 +154,23 @@ class TrabalhoPDI(App):
         self._buffer_numero = ""
         self._timer_numero = None
 
+        self.camera_ativa = False
+        self.captura = None
+        self.timer_camera = None
+        self.filtro_atual = "op_original" # guarda o estado para manter o filtro no vídeo
+
+        self.detectando_objeto = False
+        self.objeto_detectado = False
+        # usei um modelo pre treinado para rosto do opencv
+        self.classificador = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+        if self.classificador.empty():
+            self.status.update("Erro: haarcascade_frontalface_default.xml não encontrado.")
+
+        # o pygame roda o audio em outra thread ent ajuda a n travar tanto
+        pygame.mixer.init()
+        self.musica_tocando = False
+        self.caminho_musica = MUSICA
+
     def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "input_img":
             self.caminho_imagem = event.value
@@ -221,13 +240,16 @@ class TrabalhoPDI(App):
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         self.executar_operacao(event.item.id)
 
-    def executar_operacao(self, opcao: str) -> None:
+    def executar_operacao(self, opcao: str, via_camera: bool = False) -> None:
         # coloquei em um dicionario no wrapper pra diminuir o código na main
         handler = OPERACOES.get(opcao)
         if handler is None:
             return
 
-        if opcao == "op_original":
+        # Atualiza o mem para saber qual filtro esta rodando
+        self.filtro_atual = opcao
+
+        if opcao == "op_original" and not via_camera:
             self.caminho_atual = self.caminho_imagem  # reseta a imagem par ao original
 
         try:
@@ -238,10 +260,100 @@ class TrabalhoPDI(App):
                 self.tela.image = cv2_para_pil(resultado) #exibe a imagem na tela
 
             self.caminho_atual = salvar_como_atual(resultado) # salva a imagem com o ultimo filtro aplicado
-            self.status.update("")
+            if not via_camera:
+                self.status.update("")
         except Exception as e:
-            self.status.update(f"Erro na operação: {e}")
+            if not via_camera:
+                self.status.update(f"Erro na operação: {e}")
 
+    def action_toggle_camera(self) -> None:
+        self.camera_ativa = not self.camera_ativa
+
+        if self.camera_ativa:
+            self.captura = cv2.VideoCapture(0)
+            if not self.captura.isOpened():
+                self.status.update("Erro: N foi possível abrir a câmera.")
+                self.camera_ativa = False
+                return
+            
+            self.status.update("Câmera ligou")
+            
+            # Atualiza a câmera a 15 frames por segundo para não sobrecarregar o terminal
+            self.timer_camera = self.set_interval(1 / 15, self.processar_frame_camera)
+        else:
+            if self.timer_camera:
+                self.timer_camera.stop()
+            if self.captura:
+                self.captura.release()
+            # desliga o audio se a câmera for fechada
+            if self.musica_tocando:
+                pygame.mixer.music.stop()
+                self.musica_tocando = False
+            
+            self.status.update("Câmera DESLIGADA")
+            self.caminho_atual = self.caminho_imagem
+            self.executar_operacao(self.filtro_atual) # Reaplica o filtro na imagem estática
+
+    # le o frame da camera para aplicar o filtro sobre esse frame
+    def processar_frame_camera(self) -> None:
+        if not self.captura or not self.captura.isOpened():
+            return
+
+        ret, frame = self.captura.read()
+        if ret:
+            os.makedirs(CACHE_DIR, exist_ok=True)
+
+            if self.detectando_objeto:
+                cinza = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # detecta rostos na imagem
+                rostos = self.classificador.detectMultiScale(cinza, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+                
+                if len(rostos) > 0: #se detectou 1 ou mais rostos
+                    self.objeto_detectado = True
+                    # Desenha um retângulo verde ao redor de cada rosto detectado
+                    for (x, y, w, h) in rostos:
+                        #desenhar retangulo verde
+                        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                        if not self.musica_tocando:
+                            if os.path.exists(self.caminho_musica):
+                                # carrega o arquivo
+                                pygame.mixer.music.load(self.caminho_musica)
+                                pygame.mixer.music.play(-1) # -1 é um parametro para música tocar em loop
+                                self.musica_tocando = True
+                                self.status.update("barulinho bom")
+                            else:
+                                self.status.update(f"erro: Arquivo {self.caminho_musica} não encontrado")
+                else:
+                    self.objeto_detectado = False
+                    # se o rosto sumiu tem q parar o som
+                    if self.musica_tocando:
+                        pygame.mixer.music.stop()
+                        self.musica_tocando = False
+                        self.status.update("música pausada.")
+
+            # salva o frame
+            caminho_frame = os.path.join(CACHE_DIR, "cam_frame.jpg")
+            cv2.imwrite(caminho_frame, frame)
+            
+            # altera o caminho da imagem para o frame da câmera
+            self.caminho_atual = caminho_frame
+            
+            # aplica o filtro. a flag via_camera serve para evitar redefinir caminhos estáticos
+            self.executar_operacao(self.filtro_atual, via_camera=True)
+
+    def action_toggle_deteccao(self) -> None:
+        self.detectando_objeto = not self.detectando_objeto
+        estado = "ligada" if self.detectando_objeto else "desligada"
+        self.status.update(f"Detecção de rosto {estado}")
+        
+        # reseta o estado caso seja desligado
+        if not self.detectando_objeto:
+            self.objeto_detectado = False
+
+            if self.musica_tocando:
+                pygame.mixer.music.stop()
+                self.musica_tocando = False
 
 if __name__ == "__main__":
     app = TrabalhoPDI()

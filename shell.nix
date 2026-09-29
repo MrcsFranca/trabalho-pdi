@@ -10,6 +10,7 @@ pkgs.mkShell {
         textual-image
         pillow
         rich-pixels
+        pygame
       ]))
   ];
 }
