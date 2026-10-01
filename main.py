@@ -12,7 +12,7 @@ from operacoes import OPERACOES, cv2_para_pil
 # cache para somar os algoritmos
 CACHE_DIR = "_cache"
 CACHE_PATH = os.path.join(CACHE_DIR, "temp.png")
-MUSICA = "batidinhaBoa.mp3"
+MUSICA = "audio.mp3"
 
 # passa o número digitado apara o id da operação para tecla de atalho
 ATALHOS = [

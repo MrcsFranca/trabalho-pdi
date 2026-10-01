@@ -27,6 +27,7 @@ def contraste(img, c, d):
     img_contraste = np.astype(img_contraste, 'uint8')
     return img_contraste
 
+# a func logaritmo comprime faixa de intensidade alta e expande de intensidade baixa -> realça detalhes escuros
 def logaritmo(img):
     img = cv2.imread(img)
 
@@ -49,10 +50,11 @@ def potencia(img, c, gama):
     img = c * (img ** gama)
     img = img * 255.0
 
-    img = np.clip(img, 0, 255)
+    img = np.clip(img, 0, 255) # usei o clip pq o valor pode ser maior que 1 e estourar o 255
     img = img.astype(np.uint8)
     return img
 
+# vai fazendo o shift left para pegar as camadas dos bits
 def fatiamento(img, saida):
     img = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
 
@@ -66,7 +68,6 @@ def fatiamento(img, saida):
 
         nome_arquivo = f'results/fatiamento/{saida}_bit_{i}.png'
         cv2.imwrite(nome_arquivo, visivel)
-        print(f"Salvo: {nome_arquivo} (Bit {i})")
         planos.append(visivel)
 
     return planos

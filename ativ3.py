@@ -9,9 +9,9 @@ def cinza(img):
 def espectro_fourier(img):
     img = cinza(img)
 
-    f = np.fft.fft2(img)
+    f = np.fft.fft2(img) #converte a imagem do domínio espacial para o domínio da frequência
 
-    fshift = np.fft.fftshift(f)
+    fshift = np.fft.fftshift(f) #reposiciona a frequência 0 para o centro da imagem, por padrão é no canto superior esquerdo
 
     mag = np.abs(fshift)
 
@@ -29,7 +29,7 @@ def filtros_gaussiano(shape, d0):
 
     U, V = np.meshgrid(v, u)
 
-    D = np.sqrt(U**2 + V**2)
+    D = np.sqrt(U**2 + V**2) # distancia até o centro da img
 
     H_low = np.exp(-(D**2) / (2 * (d0**2)))
 
@@ -37,6 +37,8 @@ def filtros_gaussiano(shape, d0):
 
     return H_low, H_high
 
+# precisei usar IA para desenvolver essa função
+# multiplica o espectro pela mascara no domínio da frequencia
 def filtragem_frequencia(img, d0=30):
     f = np.fft.fft2(img)
     fshift = np.fft.fftshift(f)
@@ -46,10 +48,10 @@ def filtragem_frequencia(img, d0=30):
     fshift_low = fshift * H_low
     fshift_high = fshift * H_high
 
-    f_ishift_low = np.fft.ifftshift(fshift_low)
+    f_ishift_low = np.fft.ifftshift(fshift_low) # desfaz a centralização antes da transformada inversa
     f_ishift_high = np.fft.ifftshift(fshift_high)
 
-    img_back_low = np.fft.ifft2(f_ishift_low)
+    img_back_low = np.fft.ifft2(f_ishift_low) # volta para o domínio espacial
     img_back_high = np.fft.ifft2(f_ishift_high)
 
     img_low = np.abs(img_back_low)
@@ -82,6 +84,7 @@ def rejeita(img, m):
 
     return img, img_back, spectrum, m
 
+# cria uma "anel" onde só passa frequencia com distancia radial suficiente
 def filtro_banda(shape, d0, W):
     M, N = shape
     u = np.arange(M) - M / 2
@@ -95,10 +98,11 @@ def filtro_banda(shape, d0, W):
     H_passa = np.zeros((M, N))
     H_passa[dentro] = 1
 
-    H_rejeita = 1 - H_passa
+    H_rejeita = 1 - H_passa # remove especificamente a faixa definida
 
     return H_passa, H_rejeita
 
+# parecido com filtragem_frequencia mas usando as mascaras de banda
 def filtragem(img, d0=60, W=30):
     img = cinza(img)
 

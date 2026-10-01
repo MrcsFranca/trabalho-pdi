@@ -11,7 +11,7 @@ def suavizacao(img, tam):
     img = cinza(img)
 
     M = tam * tam
-    margem = tam // 2
+    margem = tam // 2 # para calcular a borda da imagem e n sair dos limites
 
     img_pad = np.pad(img, margem, mode='reflect')
     img_suave = np.zeros_like(img, dtype=np.uint8)
@@ -25,6 +25,7 @@ def suavizacao(img, tam):
     return img, img_suave
 
 # essa função foi desenvolvida com o auxílio de IA. Não tinha entendido muito bem como ela funcionava
+# tira a média dos k pixels em volta da janela
 def kvizinhos(img, tam, k):
     img = cinza(img)
 
@@ -48,6 +49,7 @@ def kvizinhos(img, tam, k):
 
     return img, suave
 
+# bom para sal e pimenta
 def mediana(img, tam):
     img = cinza(img)
 
@@ -75,6 +77,7 @@ def laplaciano(img):
 
     return img, img_laplace
 
+# por ser uma janela pequena é sensível a transições abrupta, por isso que na imagem da floresta ficou escuro
 def roberts(img):
     img = cinza(img)
 
@@ -90,6 +93,7 @@ def roberts(img):
 
     return img, Mag
 
+# mede quanto a linha de baixo é mais clara que a de cima na imagem e mesma coisa para colunas
 def prewitt(img):
     img = cinza(img)
 
@@ -106,6 +110,7 @@ def prewitt(img):
     return img, Mag
 
 # o kernel foi implementado por mim e a convoluçaõ eu usei o filter2D 
+# mesma coisa que prewitt mas com peso 2
 def sobel(img):
     img = cinza(img)
 
